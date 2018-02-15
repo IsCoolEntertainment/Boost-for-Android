@@ -5,18 +5,19 @@ Currently supported boost versions are 1.45.0, 1.48.0, 1.49.0 and 1.53.0. Boost 
 
 To compile Boost for Android you may use one of the following NDKs:
 
-| NDK / boost | 1.45 | 1.48 | 1.49 | 1.53 |
-| ----------- | ---- | ---- | ---- | ---- |
-| r4 customized by [Dmitry Moskalchuk aka CrystaX](http://www.crystax.net/android/ndk.php). | x |   |   |   |
-| r5 from the [official android repository](http://developer.android.com).                  | x |   |   |   |
-| r5 customized by [CrystaX](http://www.crystax.net/android/ndk.php).                       | x |   |   |   |
-| r7 customized by [CrystaX](http://www.crystax.net/android/ndk.php).                       | x | x | x |   |
-| r8 from the [official android repository](http://developer.android.com).                  | x | x | x |   |
-| r8b from the [official android repository](http://developer.android.com).                 |   | x | x |   |
-| r8c from the [official android repository](http://developer.android.com).                 |   |   | x |   |
-| r8d from the [official android repository](http://developer.android.com).                 |   |   | x | x |
-| r8e from the [official android repository](http://developer.android.com).                 |   |   | x | x |
-| r10 from the [official android repository](http://developer.android.com).                 |   |   | x | x |
+| NDK / boost | 1.45 | 1.48 | 1.49 | 1.53 | 1.58 |
+| ----------- | ---- | ---- | ---- | ---- | ---- |
+| r4 customized by [Dmitry Moskalchuk aka CrystaX](http://www.crystax.net/android/ndk.php). | x |   |   |   |   |
+| r5 from the [official android repository](http://developer.android.com).                  | x |   |   |   |   |
+| r5 customized by [CrystaX](http://www.crystax.net/android/ndk.php).                       | x |   |   |   |   |
+| r7 customized by [CrystaX](http://www.crystax.net/android/ndk.php).                       | x | x | x |   |   |
+| r8 from the [official android repository](http://developer.android.com).                  | x | x | x |   |   |
+| r8b from the [official android repository](http://developer.android.com).                 |   | x | x |   |   |
+| r8c from the [official android repository](http://developer.android.com).                 |   |   | x |   |   |
+| r8d from the [official android repository](http://developer.android.com).                 |   |   | x | x |   |
+| r8e from the [official android repository](http://developer.android.com).                 |   |   | x | x |   |
+| r10 from the [official android repository](http://developer.android.com).                 |   |   | x | x |   |
+| r10e from the [official android repository](http://developer.android.com).                 |   |   |   |   | x |
 
 # Quick Start
 

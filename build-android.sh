@@ -27,13 +27,23 @@
 # Command line arguments
 # -----------------------
 
+ABI=armeabi-v7a
+register_option "--abi=<abi>" select_abi "Select ABI (armeabi, armeabi-v7a, x86)"
+select_abi () {
+    ABI=$1
+}
+
 BOOST_VER1=1
-BOOST_VER2=53
+BOOST_VER2=58
 BOOST_VER3=0
-register_option "--boost=<version>" boost_version "Boost version to be used, one of {1.55.0, 1.54.0, 1.53.0, 1.49.0, 1.48.0, 1.45.0}, default is 1.53.0."
+register_option "--boost=<version>" boost_version "Boost version to be used, one of {1.58.0, 1.55.0, 1.54.0, 1.53.0, 1.49.0, 1.48.0, 1.45.0}, default is 1.58.0."
 boost_version()
 {
-  if [ "$1" = "1.55.0" ]; then
+  if [ "$1" = "1.58.0" ]; then
+    BOOST_VER1=1
+    BOOST_VER2=58
+    BOOST_VER3=0
+  elif [ "$1" = "1.55.0" ]; then
     BOOST_VER1=1
     BOOST_VER2=55
     BOOST_VER3=0
@@ -63,9 +73,21 @@ boost_version()
   fi
 }
 
+CXX=arm-linux-androideabi-g++
+register_option "--cxx=<cxx-bin>" select_cxx "The name of the cxx executable"
+select_cxx() {
+    CXX=$1
+}
+
 register_option "--toolchain=<toolchain>" select_toolchain "Select a toolchain. To see available execute ls -l ANDROID_NDK/toolchains."
 select_toolchain () {
     TOOLCHAIN=$1
+}
+
+JOBS=1
+register_option "--jobs=<N>" set_jobs "Compile on N threads."
+set_jobs () {
+    JOBS=$1
 }
 
 CLEAN=no
@@ -118,7 +140,7 @@ echo "Building boost version: $BOOST_VER1.$BOOST_VER2.$BOOST_VER3"
 BOOST_DOWNLOAD_LINK="http://downloads.sourceforge.net/project/boost/boost/$BOOST_VER1.$BOOST_VER2.$BOOST_VER3/boost_${BOOST_VER1}_${BOOST_VER2}_${BOOST_VER3}.tar.bz2?r=http%3A%2F%2Fsourceforge.net%2Fprojects%2Fboost%2Ffiles%2Fboost%2F${BOOST_VER1}.${BOOST_VER2}.${BOOST_VER3}%2F&ts=1291326673&use_mirror=garr"
 BOOST_TAR="boost_${BOOST_VER1}_${BOOST_VER2}_${BOOST_VER3}.tar.bz2"
 BOOST_DIR="boost_${BOOST_VER1}_${BOOST_VER2}_${BOOST_VER3}"
-BUILD_DIR="./build/"
+BUILD_DIR="./build-${ABI}/"
 
 # -----------------------
 
@@ -179,6 +201,8 @@ else
   AndroidNDKRoot=$(cd $AndroidNDKRoot; pwd -P)
 fi
 export AndroidNDKRoot
+export CXX
+export MARCH
 
 # Check platform patch
 case "$HOST_OS" in
@@ -219,48 +243,53 @@ echo "Detected Android NDK version $NDK_RN"
 case "$NDK_RN" in
 	4*)
 		TOOLCHAIN=${TOOLCHAIN:-arm-eabi-4.4.0}
-		CXXPATH=$AndroidNDKRoot/build/prebuilt/$PlatformOS-x86/${TOOLCHAIN}/bin/arm-eabi-g++
+		CXXPATH=$AndroidNDKRoot/build/prebuilt/$PlatformOS-x86/${TOOLCHAIN}/bin/${CXX}
 		TOOLSET=gcc-androidR4
 		;;
 	5*)
 		TOOLCHAIN=${TOOLCHAIN:-arm-linux-androideabi-4.4.3}
-		CXXPATH=$AndroidNDKRoot/toolchains/${TOOLCHAIN}/prebuilt/$PlatformOS-x86/bin/arm-linux-androideabi-g++
+		CXXPATH=$AndroidNDKRoot/toolchains/${TOOLCHAIN}/prebuilt/$PlatformOS-x86/bin/${CXX}
 		TOOLSET=gcc-androidR5
 		;;
 	7-crystax-5.beta3)
 		TOOLCHAIN=${TOOLCHAIN:-arm-linux-androideabi-4.6.3}
-		CXXPATH=$AndroidNDKRoot/toolchains/${TOOLCHAIN}/prebuilt/$PlatformOS-x86/bin/arm-linux-androideabi-g++
+		CXXPATH=$AndroidNDKRoot/toolchains/${TOOLCHAIN}/prebuilt/$PlatformOS-x86/bin/${CXX}
 		TOOLSET=gcc-androidR7crystax5beta3
 		;;
 	8)
 		TOOLCHAIN=${TOOLCHAIN:-arm-linux-androideabi-4.4.3}
-		CXXPATH=$AndroidNDKRoot/toolchains/${TOOLCHAIN}/prebuilt/$PlatformOS-x86/bin/arm-linux-androideabi-g++
+		CXXPATH=$AndroidNDKRoot/toolchains/${TOOLCHAIN}/prebuilt/$PlatformOS-x86/bin/${CXX}
 		TOOLSET=gcc-androidR8
 		;;
 	8b|8c|8d)
 		TOOLCHAIN=${TOOLCHAIN:-arm-linux-androideabi-4.6}
-		CXXPATH=$AndroidNDKRoot/toolchains/${TOOLCHAIN}/prebuilt/$PlatformOS-x86/bin/arm-linux-androideabi-g++
+		CXXPATH=$AndroidNDKRoot/toolchains/${TOOLCHAIN}/prebuilt/$PlatformOS-x86/bin/${CXX}
 		TOOLSET=gcc-androidR8b
 		;;
 	8e|9|9b|9c|9d)
 		TOOLCHAIN=${TOOLCHAIN:-arm-linux-androideabi-4.6}
-		CXXPATH=$AndroidNDKRoot/toolchains/${TOOLCHAIN}/prebuilt/$PlatformOS-x86/bin/arm-linux-androideabi-g++
+		CXXPATH=$AndroidNDKRoot/toolchains/${TOOLCHAIN}/prebuilt/$PlatformOS-x86/bin/${CXX}
 		TOOLSET=gcc-androidR8e
 		;;
 	"8e (64-bit)")
 		TOOLCHAIN=${TOOLCHAIN:-arm-linux-androideabi-4.6}
-		CXXPATH=$AndroidNDKRoot/toolchains/${TOOLCHAIN}/prebuilt/${PlatformOS}-x86_64/bin/arm-linux-androideabi-g++
+		CXXPATH=$AndroidNDKRoot/toolchains/${TOOLCHAIN}/prebuilt/${PlatformOS}-x86_64/bin/${CXX}
 		TOOLSET=gcc-androidR8e
 		;;
 	"9 (64-bit)"|"9b (64-bit)"|"9c (64-bit)"|"9d (64-bit)")
 		TOOLCHAIN=${TOOLCHAIN:-arm-linux-androideabi-4.6}
-		CXXPATH=$AndroidNDKRoot/toolchains/${TOOLCHAIN}/prebuilt/${PlatformOS}-x86_64/bin/arm-linux-androideabi-g++
+		CXXPATH=$AndroidNDKRoot/toolchains/${TOOLCHAIN}/prebuilt/${PlatformOS}-x86_64/bin/${CXX}
 		TOOLSET=gcc-androidR8e
 		;;
 	"10 (64-bit)"|"10b (64-bit)"|"10c (64-bit)"|"10d (64-bit)")
 		TOOLCHAIN=${TOOLCHAIN:-arm-linux-androideabi-4.6}
-		CXXPATH=$AndroidNDKRoot/toolchains/${TOOLCHAIN}/prebuilt/${PlatformOS}-x86_64/bin/arm-linux-androideabi-g++
+		CXXPATH=$AndroidNDKRoot/toolchains/${TOOLCHAIN}/prebuilt/${PlatformOS}-x86_64/bin/${CXX}
 		TOOLSET=gcc-androidR8e
+		;;
+	"10e (64-bit)"|"10e-rc4 (64-bit)")
+		TOOLCHAIN=${TOOLCHAIN:-arm-linux-androideabi-4.8}
+		CXXPATH=$AndroidNDKRoot/toolchains/${TOOLCHAIN}/prebuilt/${PlatformOS}-x86_64/bin/${CXX}
+		TOOLSET=gcc-androidR10e
 		;;
 	*)
 		echo "Undefined or not supported Android NDK version!"
@@ -268,7 +297,7 @@ case "$NDK_RN" in
 esac
 
 if [ -n "${AndroidSourcesDetected}" ]; then # Overwrite CXXPATH if we are building from Android sources
-    CXXPATH="${ANDROID_TOOLCHAIN}/arm-linux-androideabi-g++"
+    CXXPATH="${ANDROID_TOOLCHAIN}/${CXX}"
 fi
 
 echo Building with TOOLSET=$TOOLSET CXXPATH=$CXXPATH CXXFLAGS=$CXXFLAGS | tee $PROGDIR/build.log
@@ -345,7 +374,7 @@ then
   BOOST_VER=${BOOST_VER1}_${BOOST_VER2}_${BOOST_VER3}
   PATCH_BOOST_DIR=$PROGDIR/patches/boost-${BOOST_VER}
 
-  cp configs/user-config-boost-${BOOST_VER}.jam $BOOST_DIR/tools/build/v2/user-config.jam
+  cp configs/user-config-boost-${BOOST_VER}-${ABI}.jam $BOOST_DIR/tools/build/src/user-config.jam
 
   for dir in $PATCH_BOOST_DIR; do
     if [ ! -d "$dir" ]; then
@@ -415,11 +444,13 @@ echo "Building boost for android"
          $cxxflags                    \
          link=static                  \
          threading=multi              \
-         --layout=versioned           \
+         --layout=system              \
          -sICONV_PATH=`pwd`/../libiconv-libicu-android/armeabi \
          -sICU_PATH=`pwd`/../libiconv-libicu-android/armeabi \
          --prefix="./../$BUILD_DIR/"  \
          $LIBRARIES                   \
+         --debug-configuration \
+         -j$JOBS                      \
          install 2>&1                 \
          || { dump "ERROR: Failed to build boost for android!" ; exit 1 ; }
   } | tee -a $PROGDIR/build.log
