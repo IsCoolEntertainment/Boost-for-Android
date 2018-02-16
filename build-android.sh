@@ -141,6 +141,7 @@ BOOST_DOWNLOAD_LINK="http://downloads.sourceforge.net/project/boost/boost/$BOOST
 BOOST_TAR="boost_${BOOST_VER1}_${BOOST_VER2}_${BOOST_VER3}.tar.bz2"
 BOOST_DIR="boost_${BOOST_VER1}_${BOOST_VER2}_${BOOST_VER3}"
 BUILD_DIR="./build-${ABI}/"
+BUILD_MARKER=boost-build.done
 
 # -----------------------
 
@@ -156,27 +157,10 @@ if [ $CLEAN = yes ] ; then
 
 	echo "Cleaning: logs"
 	rm -f -r logs
-	rm -f build.log
+	rm -f build.log $BUILD_MARKER
 
   [ "$DOWNLOAD" = "yes" ] || exit 0
 fi
-
-# It is almost never desirable to have the boost-X_Y_Z directory from
-# previous builds as this script doesn't check in which state it's
-# been left (bootstrapped, patched, built, ...). Unless maybe during
-# a debug, in which case it's easy for a developer to comment out
-# this code.
-
-if [ -d "$PROGDIR/$BOOST_DIR" ]; then
-	echo "Cleaning: $BOOST_DIR"
-	rm -f -r $PROGDIR/$BOOST_DIR
-fi
-
-if [ -d "$PROGDIR/$BUILD_DIR" ]; then
-	echo "Cleaning: $BUILD_DIR"
-	rm -f -r $PROGDIR/$BUILD_DIR
-fi
-
 
 AndroidNDKRoot=$PARAMETERS
 if [ -z "$AndroidNDKRoot" ] ; then
@@ -319,6 +303,11 @@ then
 	echo "Downloading boost ${BOOST_VER1}.${BOOST_VER2}.${BOOST_VER3} please wait..."
 	prepare_download
 	download_file $BOOST_DOWNLOAD_LINK $PROGDIR/$BOOST_TAR
+
+        if [ -d "$PROGDIR/$BOOST_DIR" ]; then
+	    echo "Cleaning: $BOOST_DIR"
+	    rm -f -r $PROGDIR/$BOOST_DIR
+        fi
 fi
 
 if [ ! -f $PROGDIR/$BOOST_TAR ]
@@ -410,58 +399,63 @@ echo "# ---------------"
 echo "# Build using NDK"
 echo "# ---------------"
 
-# Build boost for android
-echo "Building boost for android"
-(
+if [ -f $BUILD_MARKER ]
+then
+    echo "$BUILD_MARKER exists. Skipping."
+else
+    # Build boost for android
+    echo "Building boost for android"
+    (
 
-  if echo $LIBRARIES | grep locale; then
-    if [ -e libiconv-libicu-android ]; then
-      echo "ICONV and ICU already compiled"
-    else
-      echo "boost_locale selected - compiling ICONV and ICU"
-      git clone https://github.com/pelya/libiconv-libicu-android.git
-      cd libiconv-libicu-android
-      ./build.sh || exit 1
-      cd ..
+        if echo $LIBRARIES | grep locale; then
+            if [ -e libiconv-libicu-android ]; then
+                echo "ICONV and ICU already compiled"
+            else
+                echo "boost_locale selected - compiling ICONV and ICU"
+                git clone https://github.com/pelya/libiconv-libicu-android.git
+                cd libiconv-libicu-android
+                ./build.sh || exit 1
+                cd ..
+            fi
+        fi
+
+        cd $BOOST_DIR
+
+        echo "Adding pathname: `dirname $CXXPATH`"
+        # `AndroidBinariesPath` could be used by user-config-boost-*.jam
+        export AndroidBinariesPath=`dirname $CXXPATH`
+        export PATH=$AndroidBinariesPath:$PATH
+        export AndroidNDKRoot
+        export NO_BZIP2=1
+
+        cxxflags=""
+        for flag in $CXXFLAGS; do cxxflags="$cxxflags cxxflags=$flag"; done
+
+        { ./bjam -q                         \
+                 target-os=linux              \
+                 toolset=$TOOLSET             \
+                 $cxxflags                    \
+                 link=static                  \
+                 threading=multi              \
+                 --layout=system              \
+                 -sICONV_PATH=`pwd`/../libiconv-libicu-android/armeabi \
+                 -sICU_PATH=`pwd`/../libiconv-libicu-android/armeabi \
+                 --prefix="./../$BUILD_DIR/"  \
+                 $LIBRARIES                   \
+                 --debug-configuration \
+                 -j$JOBS                      \
+                 install 2>&1                 \
+              || { dump "ERROR: Failed to build boost for android!" ; exit 1 ; }
+        } | tee -a $PROGDIR/build.log
+    )
+
+    dump "Done!"
+
+    if [ $PREFIX ]; then
+        echo "Prefix set, copying files to $PREFIX"
+        cp -r $PROGDIR/$BUILD_DIR/lib $PREFIX
+        cp -r $PROGDIR/$BUILD_DIR/include $PREFIX
     fi
-  fi
 
-  cd $BOOST_DIR
-
-  echo "Adding pathname: `dirname $CXXPATH`"
-  # `AndroidBinariesPath` could be used by user-config-boost-*.jam
-  export AndroidBinariesPath=`dirname $CXXPATH`
-  export PATH=$AndroidBinariesPath:$PATH
-  export AndroidNDKRoot
-  export NO_BZIP2=1
-
-  cxxflags=""
-  for flag in $CXXFLAGS; do cxxflags="$cxxflags cxxflags=$flag"; done
-
-  { ./bjam -q                         \
-         target-os=linux              \
-         toolset=$TOOLSET             \
-         $cxxflags                    \
-         link=static                  \
-         threading=multi              \
-         --layout=system              \
-         -sICONV_PATH=`pwd`/../libiconv-libicu-android/armeabi \
-         -sICU_PATH=`pwd`/../libiconv-libicu-android/armeabi \
-         --prefix="./../$BUILD_DIR/"  \
-         $LIBRARIES                   \
-         --debug-configuration \
-         -j$JOBS                      \
-         install 2>&1                 \
-         || { dump "ERROR: Failed to build boost for android!" ; exit 1 ; }
-  } | tee -a $PROGDIR/build.log
-
-  # PIPESTATUS variable is defined only in Bash, and we are using /bin/sh, which is not Bash on newer Debian/Ubuntu
-)
-
-dump "Done!"
-
-if [ $PREFIX ]; then
-    echo "Prefix set, copying files to $PREFIX"
-    cp -r $PROGDIR/$BUILD_DIR/lib $PREFIX
-    cp -r $PROGDIR/$BUILD_DIR/include $PREFIX
+    touch $BUILD_MARKER
 fi
