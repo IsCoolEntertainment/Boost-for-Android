@@ -361,38 +361,34 @@ then
 
   # Apply patches to boost
   BOOST_VER=${BOOST_VER1}_${BOOST_VER2}_${BOOST_VER3}
-  PATCH_BOOST_DIR=$PROGDIR/patches/boost-${BOOST_VER}
+  PATCH_BOOST_DIR=$(cd $(dirname $0); pwd)/patches/boost-${BOOST_VER}
 
-  cp configs/user-config-boost-${BOOST_VER}-${ABI}.jam $BOOST_DIR/tools/build/src/user-config.jam
+  cp `dirname $0`/configs/user-config-boost-${BOOST_VER}-${ABI}.jam $BOOST_DIR/tools/build/src/user-config.jam
 
-  for dir in $PATCH_BOOST_DIR; do
-    if [ ! -d "$dir" ]; then
-      echo "Could not find directory '$dir' while looking for patches"
-      exit 1
-    fi
+  if [ -d "$PATCH_BOOST_DIR" ]
+  then
+      PATCHES=`(cd $PATCH_BOOST_DIR && ls *.patch | sort) 2> /dev/null`
 
-    PATCHES=`(cd $dir && ls *.patch | sort) 2> /dev/null`
-
-    if [ -z "$PATCHES" ]; then
-      echo "No patches found in directory '$dir'"
-      exit 1
-    fi
-
-    for PATCH in $PATCHES; do
-      PATCH=`echo $PATCH | sed -e s%^\./%%g`
-      SRC_DIR=$PROGDIR/$BOOST_DIR
-      PATCHDIR=`dirname $PATCH`
-      PATCHNAME=`basename $PATCH`
-      log "Applying $PATCHNAME into $SRC_DIR/$PATCHDIR"
-      cd $SRC_DIR && patch -p1 < $dir/$PATCH && cd $PROGDIR
-      if [ $? != 0 ] ; then
-        dump "ERROR: Patch failure !! Please check your patches directory!"
-        dump "       Try to perform a clean build using --clean ."
-        dump "       Problem patch: $dir/$PATCHNAME"
-        exit 1
+      if [ -z "$PATCHES" ]; then
+          echo "No patches found in directory '$PATCH_BOOST_DIR'"
+          exit 1
       fi
-    done
-  done
+
+      for PATCH in $PATCHES; do
+          PATCH=`echo $PATCH | sed -e s%^\./%%g`
+          SRC_DIR=$PROGDIR/$BOOST_DIR
+          PATCHDIR=`dirname $PATCH`
+          PATCHNAME=`basename $PATCH`
+          log "Applying $PATCHNAME into $SRC_DIR/$PATCHDIR"
+          cd $SRC_DIR && (pwd; patch -p1 < $PATCH_BOOST_DIR/$PATCH ) && cd $PROGDIR
+          if [ $? != 0 ] ; then
+              dump "ERROR: Patch failure !! Please check your patches directory!"
+              dump "       Try to perform a clean build using --clean ."
+              dump "       Problem patch: $dir/$PATCHNAME"
+              exit 1
+          fi
+      done
+  fi
 fi
 
 echo "# ---------------"
