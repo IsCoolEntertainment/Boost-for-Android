@@ -39,6 +39,8 @@
 
 import os ;
 local AndroidNDKRoot = [ os.environ AndroidNDKRoot ] ;
+local AndroidToolchainVersion = [ os.environ AndroidToolchainVersion ] ;
+local AndroidTargetVersion = [ os.environ AndroidTargetVersion ] ;
 
 
 # --------------------------------------------------------------------
@@ -61,14 +63,14 @@ i686-linux-android-g++
 <compileflags>-fno-strict-aliasing
 <compileflags>-funswitch-loops
 <compileflags>-finline-limit=300
-<compileflags>-I$(AndroidNDKRoot)/platforms/android-9/arch-x86/usr/include
+<compileflags>-I$(AndroidNDKRoot)/platforms/android-$(AndroidTargetVersion)/arch-x86/usr/include
 <compileflags>-Wa,--noexecstack
 <compileflags>-DANDROID
 <compileflags>-D__ANDROID__
 <compileflags>-DNDEBUG
 <compileflags>-O2
-<compileflags>-I$(AndroidNDKRoot)/sources/cxx-stl/gnu-libstdc++/4.8/include
-<compileflags>-I$(AndroidNDKRoot)/sources/cxx-stl/gnu-libstdc++/4.8/libs/x86/include
+<compileflags>-I$(AndroidNDKRoot)/sources/cxx-stl/gnu-libstdc++/$(AndroidToolchainVersion)/include
+<compileflags>-I$(AndroidNDKRoot)/sources/cxx-stl/gnu-libstdc++/$(AndroidToolchainVersion)/libs/x86/include
 # @Moss - Above are the 'oficial' android flags
 <architecture>x86
 <compileflags>-fvisibility=hidden

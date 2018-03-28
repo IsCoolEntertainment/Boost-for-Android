@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 # Copyright (C) 2010 Mystic Tree Games
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -36,66 +36,43 @@ select_abi () {
 BOOST_VER1=1
 BOOST_VER2=58
 BOOST_VER3=0
-register_option "--boost=<version>" boost_version "Boost version to be used, one of {1.58.0, 1.55.0, 1.54.0, 1.53.0, 1.49.0, 1.48.0, 1.45.0}, default is 1.58.0."
+register_option "--boost=<version>" boost_version "Boost version to be used." \
+                "$BOOST_VER1.$BOOST_VER2.$BOOST_VER3"
+
 boost_version()
 {
-  if [ "$1" = "1.58.0" ]; then
-    BOOST_VER1=1
-    BOOST_VER2=58
-    BOOST_VER3=0
-  elif [ "$1" = "1.55.0" ]; then
-    BOOST_VER1=1
-    BOOST_VER2=55
-    BOOST_VER3=0
-  elif [ "$1" = "1.54.0" ]; then
-    BOOST_VER1=1
-    BOOST_VER2=54
-    BOOST_VER3=0
-  elif [ "$1" = "1.53.0" ]; then
-    BOOST_VER1=1
-    BOOST_VER2=53
-    BOOST_VER3=0
-  elif [ "$1" = "1.49.0" ]; then
-    BOOST_VER1=1
-    BOOST_VER2=49
-    BOOST_VER3=0
-  elif [ "$1" = "1.48.0" ]; then
-    BOOST_VER1=1
-    BOOST_VER2=48
-    BOOST_VER3=0
-  elif [ "$1" = "1.45.0" ]; then
-    BOOST_VER1=1
-    BOOST_VER2=45
-    BOOST_VER3=0
-  else
-    echo "Unsupported boost version '$1'."
-    exit 1
-  fi
+    IFS=. read -r BOOST_VER1 BOOST_VER2 BOOST_VER3 <<<"$1"
 }
 
 CXX=arm-linux-androideabi-g++
-register_option "--cxx=<cxx-bin>" select_cxx "The name of the cxx executable"
+register_option "--cxx=<cxx-bin>" select_cxx "The name of the cxx executable" \
+                "$CXX"
+
 select_cxx() {
     CXX=$1
 }
 
 register_option "--toolchain=<toolchain>" select_toolchain "Select a toolchain. To see available execute ls -l ANDROID_NDK/toolchains."
+
 select_toolchain () {
     TOOLCHAIN=$1
 }
 
 JOBS=1
-register_option "--jobs=<N>" set_jobs "Compile on N threads."
+register_option "--jobs=<N>" set_jobs "Compile on N threads." "$JOBS"
+
 set_jobs () {
     JOBS=$1
 }
 
 CLEAN=no
-register_option "--clean"    do_clean     "Delete all previously downloaded and built files, then exit."
+register_option "--clean"    do_clean     "Delete all previously downloaded and built files, then exit." "$CLEAN"
+
 do_clean () {	CLEAN=yes; }
 
 DOWNLOAD=no
-register_option "--download" do_download  "Only download required files and clean up previus build. No build will be performed."
+
+register_option "--download" do_download  "Only download required files and clean up previus build. No build will be performed." "$DOWNLOAD"
 
 do_download ()
 {
@@ -126,10 +103,12 @@ do_prefix () {
 
 PROGRAM_PARAMETERS="<ndk-root>"
 PROGRAM_DESCRIPTION=\
-"       Boost For Android\n"\
-"Copyright (C) 2010 Mystic Tree Games\n"\
+"  Boost For Android
 
-extract_parameters $@
+  Copyright (C) 2018-current IsCool Entertainment
+  Copyright (C) 2010 Mystic Tree Games"\
+
+extract_parameters "$@"
 
 echo "Building boost version: $BOOST_VER1.$BOOST_VER2.$BOOST_VER3"
 
@@ -225,53 +204,8 @@ fi
 echo "Detected Android NDK version $NDK_RN"
 
 case "$NDK_RN" in
-	4*)
-		TOOLCHAIN=${TOOLCHAIN:-arm-eabi-4.4.0}
-		CXXPATH=$AndroidNDKRoot/build/prebuilt/$PlatformOS-x86/${TOOLCHAIN}/bin/${CXX}
-		TOOLSET=gcc-androidR4
-		;;
-	5*)
-		TOOLCHAIN=${TOOLCHAIN:-arm-linux-androideabi-4.4.3}
-		CXXPATH=$AndroidNDKRoot/toolchains/${TOOLCHAIN}/prebuilt/$PlatformOS-x86/bin/${CXX}
-		TOOLSET=gcc-androidR5
-		;;
-	7-crystax-5.beta3)
-		TOOLCHAIN=${TOOLCHAIN:-arm-linux-androideabi-4.6.3}
-		CXXPATH=$AndroidNDKRoot/toolchains/${TOOLCHAIN}/prebuilt/$PlatformOS-x86/bin/${CXX}
-		TOOLSET=gcc-androidR7crystax5beta3
-		;;
-	8)
-		TOOLCHAIN=${TOOLCHAIN:-arm-linux-androideabi-4.4.3}
-		CXXPATH=$AndroidNDKRoot/toolchains/${TOOLCHAIN}/prebuilt/$PlatformOS-x86/bin/${CXX}
-		TOOLSET=gcc-androidR8
-		;;
-	8b|8c|8d)
-		TOOLCHAIN=${TOOLCHAIN:-arm-linux-androideabi-4.6}
-		CXXPATH=$AndroidNDKRoot/toolchains/${TOOLCHAIN}/prebuilt/$PlatformOS-x86/bin/${CXX}
-		TOOLSET=gcc-androidR8b
-		;;
-	8e|9|9b|9c|9d)
-		TOOLCHAIN=${TOOLCHAIN:-arm-linux-androideabi-4.6}
-		CXXPATH=$AndroidNDKRoot/toolchains/${TOOLCHAIN}/prebuilt/$PlatformOS-x86/bin/${CXX}
-		TOOLSET=gcc-androidR8e
-		;;
-	"8e (64-bit)")
-		TOOLCHAIN=${TOOLCHAIN:-arm-linux-androideabi-4.6}
-		CXXPATH=$AndroidNDKRoot/toolchains/${TOOLCHAIN}/prebuilt/${PlatformOS}-x86_64/bin/${CXX}
-		TOOLSET=gcc-androidR8e
-		;;
-	"9 (64-bit)"|"9b (64-bit)"|"9c (64-bit)"|"9d (64-bit)")
-		TOOLCHAIN=${TOOLCHAIN:-arm-linux-androideabi-4.6}
-		CXXPATH=$AndroidNDKRoot/toolchains/${TOOLCHAIN}/prebuilt/${PlatformOS}-x86_64/bin/${CXX}
-		TOOLSET=gcc-androidR8e
-		;;
-	"10 (64-bit)"|"10b (64-bit)"|"10c (64-bit)"|"10d (64-bit)")
-		TOOLCHAIN=${TOOLCHAIN:-arm-linux-androideabi-4.6}
-		CXXPATH=$AndroidNDKRoot/toolchains/${TOOLCHAIN}/prebuilt/${PlatformOS}-x86_64/bin/${CXX}
-		TOOLSET=gcc-androidR8e
-		;;
 	"10e (64-bit)"|"10e-rc4 (64-bit)")
-		TOOLCHAIN=${TOOLCHAIN:-arm-linux-androideabi-4.8}
+		TOOLCHAIN=${TOOLCHAIN:-arm-linux-androideabi-4.9}
 		CXXPATH=$AndroidNDKRoot/toolchains/${TOOLCHAIN}/prebuilt/${PlatformOS}-x86_64/bin/${CXX}
 		TOOLSET=gcc-androidR10e
 		;;
@@ -422,6 +356,8 @@ else
         export AndroidBinariesPath=`dirname $CXXPATH`
         export PATH=$AndroidBinariesPath:$PATH
         export AndroidNDKRoot
+        export AndroidToolchainVersion=$(echo "$TOOLCHAIN" | sed 's/.*-\([^-]*\)/\1/')
+        export AndroidTargetVersion=21
         export NO_BZIP2=1
 
         cxxflags=""
