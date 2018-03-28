@@ -363,7 +363,7 @@ else
         cxxflags=""
         for flag in $CXXFLAGS; do cxxflags="$cxxflags cxxflags=$flag"; done
 
-        { ./bjam -q                         \
+        { ./bjam -q                           \
                  target-os=linux              \
                  toolset=$TOOLSET             \
                  $cxxflags                    \
@@ -374,8 +374,9 @@ else
                  -sICU_PATH=`pwd`/../libiconv-libicu-android/armeabi \
                  --prefix="./../$BUILD_DIR/"  \
                  $LIBRARIES                   \
-                 --debug-configuration \
+                 --debug-configuration        \
                  -j$JOBS                      \
+                 release                      \
                  install 2>&1                 \
               || { dump "ERROR: Failed to build boost for android!" ; exit 1 ; }
         } | tee -a $PROGDIR/build.log
