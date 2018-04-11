@@ -28,9 +28,18 @@
 # -----------------------
 
 ABI=armeabi-v7a
-register_option "--abi=<abi>" select_abi "Select ABI (armeabi, armeabi-v7a, x86)"
+register_option "--abi=<abi>" select_abi \
+                "Select ABI (armeabi, armeabi-v7a, x86)" \
+                "$ABI"
 select_abi () {
-    ABI=$1
+    ABI="$1"
+}
+
+ANDROID_TARGET=21
+register_option "--target-version=<version>" select_target_version \
+                "Select Android's target version" "$ANDROID_TARGET"
+select_target_version () {
+    ANDROID_TARGET="$1"
 }
 
 BOOST_VER1=1
@@ -357,7 +366,7 @@ else
         export PATH=$AndroidBinariesPath:$PATH
         export AndroidNDKRoot
         export AndroidToolchainVersion=$(echo "$TOOLCHAIN" | sed 's/.*-\([^-]*\)/\1/')
-        export AndroidTargetVersion=21
+        export AndroidTargetVersion="$ANDROID_TARGET"
         export NO_BZIP2=1
 
         cxxflags=""
